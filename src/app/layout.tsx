@@ -4,6 +4,7 @@ import { DM_Sans, DM_Serif_Display } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/next";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -43,6 +44,7 @@ export default function RootLayout({
           }}
         />
         <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   );

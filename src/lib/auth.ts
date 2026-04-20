@@ -6,10 +6,20 @@ import { prisma } from "./prisma";
 export const auth = betterAuth({
   database: prismaAdapter(prisma, { provider: "postgresql" }),
 
+  // Must match the actual URL the app is served from.
+  // Better Auth uses this to validate request origins and set cookies correctly.
+  baseURL: process.env.BETTER_AUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
+
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false,
   },
+
+  trustedOrigins: [
+    process.env.BETTER_AUTH_URL ?? "",
+    process.env.NEXT_PUBLIC_APP_URL ?? "",
+    "http://localhost:3000",
+  ].filter(Boolean),
 
   session: {
     expiresIn:  60 * 60 * 24 * 7,

@@ -14,9 +14,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "SEED_SECRET not set — endpoint disabled." }, { status: 403 });
   }
 
-  const { token } = await req.json().catch(() => ({}));
-  if (token !== secret) {
-    return NextResponse.json({ error: "Invalid token." }, { status: 401 });
+  const body = await req.json().catch(() => ({}));
+  const token = typeof body.token === "string" ? body.token.trim() : "";
+  const secretTrimmed = secret.trim();
+
+  if (token !== secretTrimmed) {
+    return NextResponse.json({
+      error: "Invalid token.",
+      hint: "Check SEED_SECRET in Vercel env vars has no surrounding quotes or spaces.",
+    }, { status: 401 });
   }
 
   const username = process.env.MASTER_ADMIN_USERNAME || "admin";

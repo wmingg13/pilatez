@@ -1,0 +1,188 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+enum AdminRole {
+  MASTER_ADMIN
+  ADMIN
+}
+
+enum MembershipStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ImageSection {
+  FRONT
+  BACK
+  LEFT
+  RIGHT
+}
+
+enum PilatesExperience {
+  NONE
+  LESS_THAN_6_MONTHS
+  ONE_TO_THREE_YEARS
+  MORE_THAN_3_YEARS
+}
+
+model user {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  role          AdminRole @default(ADMIN)
+  sessions      session[]
+  accounts      account[]
+
+  @@map("user")
+}
+
+model session {
+  id        String   @id @default(cuid())
+  expiresAt DateTime
+  token     String   @unique
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
+model account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  userId                String
+  user                  user      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("account")
+}
+
+model verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("verification")
+}
+
+model Instructor {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  members   Member[]
+
+  @@map("instructor")
+}
+
+model Member {
+  id               String            @id @default(cuid())
+  name             String
+  email            String?           @unique
+  phone            String
+  age              Int?
+  remarks          String?
+  r2FolderKey      String?           // e.g. a3kx9m2q_Jordan_Lee_Sarah_Tan — set once, reused for all uploads
+  membershipStatus MembershipStatus  @default(ACTIVE)
+  joinedAt         DateTime          @default(now())
+  instructorId     String?
+  instructor       Instructor?       @relation(fields: [instructorId], references: [id], onDelete: SetNull)
+  createdById      String?
+  updatedById      String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  photos           MemberPhoto[]
+  healthProfile    MemberHealthProfile?
+
+  @@index([email])
+  @@index([membershipStatus])
+  @@map("member")
+}
+
+model MemberHealthProfile {
+  id        String  @id @default(cuid())
+  memberId  String  @unique
+  member    Member  @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  // Health & Fitness History
+  pilatesExperience     PilatesExperience?
+  fitnessGoal           String?
+  physicalConsiderations String?
+  currentMedications    String?
+  currentInjuries       String?
+  pastSurgeries         String?
+
+  // Medical conditions (checkbox flags)
+  condHerniatedDisk         Boolean @default(false)
+  condHighBloodPressure     Boolean @default(false)
+  condDiabetes              Boolean @default(false)
+  condHypoglycemia          Boolean @default(false)
+  condNumbness              Boolean @default(false)
+  condBackpain              Boolean @default(false)
+  condOsteoporosis          Boolean @default(false)
+  condPregnancy             Boolean @default(false)
+  condVertigo               Boolean @default(false)
+  condShoulderImpingement   Boolean @default(false)
+  condStenosis              Boolean @default(false)
+  condScoliosis             Boolean @default(false)
+  condCarpalTunnel          Boolean @default(false)
+  condCancer                Boolean @default(false)
+
+  // Instructor notes
+  assessmentSummary String?
+  trainingPlan      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("member_health_profile")
+}
+
+model MemberPhoto {
+  id              String       @id @default(cuid())
+  memberId        String
+  member          Member       @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  section         ImageSection
+  driveFileId     String
+  drivePath       String
+  driveWebViewUrl String?
+  fileName        String
+  remark          String?
+  uploadedAt      DateTime     @default(now())
+  uploadedById    String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([memberId])
+  @@index([memberId, section])
+  @@index([memberId, section, uploadedAt])
+  @@map("member_photo")
+}

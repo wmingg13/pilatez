@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --radius: 0.625rem;
+    --border: 45 18% 85%;
+    --foreground: 248 25% 20%;
+  }
+
+  * {
+    @apply border-[hsl(var(--border))];
+  }
+
+  body {
+    @apply bg-linen text-[hsl(var(--foreground))] font-sans antialiased;
+  }
+}

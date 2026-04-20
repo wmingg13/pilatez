@@ -1,0 +1,46 @@
+# =============================================================================
+# docker-compose.yml — Let'z Pilates local stack
+# Services: app (Next.js) + db (PostgreSQL 16)
+# Usage: docker compose up --build
+# =============================================================================
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: pilatez_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER:     pilatez
+      POSTGRES_PASSWORD: pilatez
+      POSTGRES_DB:       pilatez
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pilatez -d pilatez"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    container_name: pilatez_app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      # These override whatever DATABASE_URL is in .env so Docker always
+      # connects to the compose DB service, not localhost.
+      DATABASE_URL:          "postgresql://pilatez:pilatez@db:5432/pilatez?schema=public"
+      DATABASE_URL_UNPOOLED: "postgresql://pilatez:pilatez@db:5432/pilatez?schema=public"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

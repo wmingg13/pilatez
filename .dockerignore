@@ -1,0 +1,22 @@
+# Keep the Docker build context clean.
+# Critically: exclude pnpm-lock.yaml so Docker always uses npm ci
+# giving a flat node_modules Prisma can reliably find its engines in.
+
+node_modules/
+.pnpm-store/
+.next/
+out/
+
+.env
+.env.local
+.env.*.local
+
+.git/
+.gitignore
+README.md
+DOCKER.md
+SETUP.md
+
+**/__tests__/
+**/*.test.ts
+**/*.spec.ts

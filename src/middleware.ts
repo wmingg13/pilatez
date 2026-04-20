@@ -1,23 +1,31 @@
 // src/middleware.ts
-import { NextRequest, NextResponse } from "next/server";
+// Edge-safe middleware — checks for Better Auth session cookie.
+// Better Auth prefixes the cookie with __Secure- on HTTPS (production).
 
-const SESSION_COOKIE = "better-auth.session_token";
+import { NextRequest, NextResponse } from "next/server";
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Only protect /admin routes — nothing else
-  if (pathname.startsWith("/admin")) {
-    const session = request.cookies.get(SESSION_COOKIE);
-    if (!session?.value) {
-      return NextResponse.redirect(new URL("/login", request.url));
-    }
+  if (!pathname.startsWith("/admin")) {
+    return NextResponse.next();
+  }
+
+  const cookies = request.cookies;
+
+  // Better Auth sets the session cookie with the __Secure- prefix on HTTPS.
+  // Check both variants so it works on both local (http) and Vercel (https).
+  const hasSession =
+    cookies.has("better-auth.session_token") ||
+    cookies.has("__Secure-better-auth.session_token");
+
+  if (!hasSession) {
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  // Only run on /admin routes — do NOT intercept /login
   matcher: ["/admin/:path*"],
 };

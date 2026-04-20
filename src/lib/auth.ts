@@ -22,9 +22,11 @@ export const auth = betterAuth({
   ].filter(Boolean),
 
   session: {
-    expiresIn:  60 * 60 * 24 * 7,
-    updateAge:  60 * 60 * 24,
-    cookieCache: { enabled: true, maxAge: 60 * 5 },
+    expiresIn: 60 * 60 * 24 * 7,
+    updateAge: 60 * 60 * 24,
+    // cookieCache disabled — caching can cause the session cookie to not be
+    // immediately visible to Next.js middleware right after login.
+    cookieCache: { enabled: false },
   },
 
   user: {
